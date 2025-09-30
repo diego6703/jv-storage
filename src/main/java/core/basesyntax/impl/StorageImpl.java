@@ -3,57 +3,53 @@ package core.basesyntax.impl;
 import core.basesyntax.Storage;
 
 public class StorageImpl<K, V> implements Storage<K, V> {
-    private static final int DEFAULT_CAPACITY = 10;
+    private static final int MAX_CAPACITY = 10;
     private static final int MIN_CAPACITY = 0;
     private static final String CCE_MESSAGE = "cant cast class";
     private K[] keyList;
     private V[] valueList;
-    private int numberOfItemsInList = MIN_CAPACITY;
+    private int numberOfItemsInList;
 
+    @SuppressWarnings("unchecked")
     public StorageImpl() {
-        try {
-            this.keyList = (K[]) new Object[DEFAULT_CAPACITY];
-            this.valueList = (V[]) new Object[DEFAULT_CAPACITY];
-        } catch (ClassCastException c) {
-            throw new RuntimeException(CCE_MESSAGE);
-        }
+        this.keyList = (K[]) new Object[MAX_CAPACITY];
+        this.valueList = (V[]) new Object[MAX_CAPACITY];
+        numberOfItemsInList = MIN_CAPACITY;
     }
 
     @Override
     public void put(K key, V value) {
         boolean isInList = false;
-        for (int i = 0; i < numberOfItemsInList; i++) {
-            if (key == null && keyList[i] == null) {
-                valueList[i] = value;
-                isInList = true;
-            }
-            if (key != null && key.equals(keyList[i])) {
-                valueList[i] = value;
-                isInList = true;
-            }
-        }
-        if (!isInList) {
+        int indexOfElement = indexOfKey(key);
+        if (indexOfElement == -1 && numberOfItemsInList < MAX_CAPACITY) {
             keyList[numberOfItemsInList] = key;
             valueList[numberOfItemsInList] = value;
             numberOfItemsInList++;
+        } else {
+            valueList[indexOfElement] = value;
         }
     }
 
     @Override
     public V get(K key) {
-        for (int i = 0; i < numberOfItemsInList; i++) {
-            if (key == null && keyList[i] == null) {
-                return valueList[i];
-            }
-            if (key != null && key.equals(keyList[i])) {
-                return valueList[i];
-            }
-        }
-        return null;
+        int indexOfElement = indexOfKey(key);
+        return indexOfElement == -1 ? null : valueList[indexOfElement];
     }
 
     @Override
     public int size() {
         return numberOfItemsInList;
+    }
+
+    private int indexOfKey(K key) {
+        for (int i = 0; i < numberOfItemsInList; i++) {
+            if (key == null && keyList[i] == null) {
+                return i;
+            }
+            if (key != null && key.equals(keyList[i])) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
